@@ -359,8 +359,13 @@ class Model(nn.Module):
         self.target_feature_idx = 0
         self.revin = RevIN(num_features=1) 
         
+        from transformers import GPT2Model
+        self.gpt2_text = GPT2Model.from_pretrained('gpt2', output_attentions=True, output_hidden_states=True)
+        
+        gpt_layers = getattr(configs, 'gpt_layers', 3)
+        self.gpt2_text.h = self.gpt2_text.h[:gpt_layers]
+        
         peft_config = LoraConfig(
-            task_type=TaskType.CAUSAL_LM, 
             inference_mode=False, 
             r=getattr(configs, 'r', 8),
             lora_alpha=getattr(configs, 'lora_alpha', 16),
@@ -368,10 +373,6 @@ class Model(nn.Module):
             target_modules=["c_attn"]
         )
         
-        self.gpt2_text = GPT2Model.from_pretrained('gpt2', output_attentions=True, output_hidden_states=True)
-        
-        gpt_layers = getattr(configs, 'gpt_layers', 3)
-        self.gpt2_text.h = self.gpt2_text.h[:gpt_layers]
         self.gpt2_text = get_peft_model(self.gpt2_text, peft_config)
 
         for i, (name, param) in enumerate(self.gpt2_text.named_parameters()):
@@ -380,10 +381,19 @@ class Model(nn.Module):
             else:
                 param.requires_grad = False
         
+        self.embedding_analysis_mode = False
+        self.collected_embeddings = {
+            'ts_vec': [],
+            'doc_vec': [], 
+            'weighted_vec': [],
+            'labels': []
+        }
+        
         doc2vec_model_path = getattr(configs, 'doc2vec_model_path', None)
         doc2vec_vector_size = getattr(configs, 'doc2vec_vector_size', configs.d_model)
         doc2vec_update_frequency = getattr(configs, 'doc2vec_update_frequency', 'epoch')
         
+
         self.in_layer = Encoder_Text(
             1,
             hidden_dim=configs.d_model,
@@ -400,7 +410,6 @@ class Model(nn.Module):
         for layer in (self.gpt2_text, self.in_layer, self.out_layer):
             layer.to(device=device)
             layer.train()
-
     def get_optimizer_params(self, base_lr):
         gpt2_lora_params = []
         gpt2_other_params = []
@@ -448,7 +457,8 @@ class Model(nn.Module):
         outputs_time1, outputs_text1 = self.in_layer(temp_x, texts)
         outputs_text1 = self.safe_nan_check(outputs_text1)
 
-        outputs_text, _ = self.gpt2_text(inputs_embeds=outputs_text1)
+        gpt_output = self.gpt2_text(inputs_embeds=outputs_text1)
+        outputs_text = gpt_output.last_hidden_state
         outputs_text = self.safe_nan_check(outputs_text)
         outputs_text += outputs_text1
 
