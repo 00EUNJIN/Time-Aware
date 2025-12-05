@@ -28,7 +28,7 @@ BASE_CMD="$PYTHON_PATH run.py \
     --is_training 1 \
     --task_name long_term_forecast \
     --model_id climate_forecast \
-    --model CALF_PatchTST \
+    --model TimeAware \
     --data custom \
     --root_path ./dataset/ \
     --data_path climate_2014_2023_final.csv \
