@@ -315,7 +315,7 @@ class Encoder_Text(nn.Module):
             self.cross_attention_weights = attention_weights.detach().cpu()
 
             alpha = torch.sigmoid(self.fusion_alpha)
-            attended_output = 0.5 * x_time + 0.5 * enhanced_timepoints
+            attended_output = (1 - alpha) * x_time + alpha * enhanced_timepoints
         
             return attended_output
         
