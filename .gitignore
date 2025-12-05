@@ -1,0 +1,40 @@
+# Python
+__pycache__/
+*.py[cod]
+*.so
+.Python
+*.egg-info/
+
+# Data
+dataset/*.csv
+dataset/*.txt
+!dataset/.gitkeep
+
+# Results
+checkpoints/*
+!checkpoints/.gitkeep
+results/*
+!results/.gitkeep
+test_results/
+*.npy
+*.pdf
+*.png
+
+# Logs
+*.log
+*.txt
+!requirements.txt
+!README.md
+
+# IDE
+.vscode/
+.idea/
+*.swp
+
+# OS
+.DS_Store
+
+# Models
+*.pth
+*.model
+*.bin
