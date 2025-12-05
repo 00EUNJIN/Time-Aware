@@ -56,4 +56,4 @@ Generated files during training:
 
 ## Model Architecture
 
-Input Time Series + Text Report → RevIN → Doc2Vec Text Encoder → Time-Aware Fusion Layer → GPT-2 (LoRA Fine-Tuned) → Forecast Output
+<img width="2000" height="612" alt="Image" src="https://github.com/user-attachments/assets/420680b3-afdb-48b4-bddd-d2780bf8a8de" />
